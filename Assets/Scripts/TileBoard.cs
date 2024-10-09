@@ -10,6 +10,8 @@ public class TileBoard : MonoBehaviour
     private TileGrid grid;
     private List<Tile> tiles;
     private bool waiting;
+    
+    public GameManager gameManager;
 
     private void Awake()
     {
@@ -17,13 +19,16 @@ public class TileBoard : MonoBehaviour
         tiles = new List<Tile>(16);
     }
 
-    private void Start()
+    public void ClearBoard()
     {
-        CreateTile();
-        CreateTile();
+
+        foreach (var cell in grid.cells) cell.tile = null;
+
+        foreach (var tile in tiles) Destroy(tile.gameObject);
+        tiles.Clear();
     }
 
-    private void CreateTile()
+    public void CreateTile()
     {
         Tile tile = Instantiate(tilePrefab, grid.transform);
 
@@ -151,11 +156,35 @@ public class TileBoard : MonoBehaviour
         yield return new WaitForSeconds(0.05F);
         waiting = false;
 
-        foreach (Tile tile in tiles) {
+        foreach (Tile tile in tiles)
+        {
             tile.changeLocked();
         }
 
         if (tiles.Count != grid.size) CreateTile();
-        // TODO: check for game over
+
+        if (CheckedForGameOver()) {
+            gameManager.GameOver();
+        }
+    }
+
+    private bool CheckedForGameOver()
+    {
+        if (tiles.Count != grid.size) return false;
+
+        foreach (var tile in tiles)
+        {
+            TileCell up = grid.GetAdjacentCell(tile.cell, Vector2Int.up);
+            TileCell down = grid.GetAdjacentCell(tile.cell, Vector2Int.down);
+            TileCell left = grid.GetAdjacentCell(tile.cell, Vector2Int.left);
+            TileCell right = grid.GetAdjacentCell(tile.cell, Vector2Int.right);
+
+            if (up != null && CanMerge(tile, up.tile)) return false;
+            if (down != null && CanMerge(tile, down.tile)) return false;
+            if (left != null && CanMerge(tile, left.tile)) return false;
+            if (right != null && CanMerge(tile, right.tile)) return false;
+        }
+
+        return true;
     }
 }
