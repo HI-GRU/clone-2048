@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,7 +27,7 @@ public class TileBoard : MonoBehaviour
     {
         Tile tile = Instantiate(tilePrefab, grid.transform);
 
-        float rand = Random.Range(0F, 1F);
+        float rand = UnityEngine.Random.Range(0F, 1F);
 
         if (rand < 0.9)
         {
@@ -81,7 +82,8 @@ public class TileBoard : MonoBehaviour
             }
         }
 
-        if (changed) {
+        if (changed)
+        {
             StartCoroutine(WaitForChanges());
         }
     }
@@ -95,7 +97,11 @@ public class TileBoard : MonoBehaviour
         {
             if (adjacent.occupied)
             {
-                // TODO: merging
+                if (CanMerge(tile, adjacent.tile))
+                {
+                    Merge(tile, adjacent.tile);
+                    return true;
+                }
                 break;
             }
 
@@ -112,6 +118,32 @@ public class TileBoard : MonoBehaviour
         return false;
     }
 
+    private bool CanMerge(Tile a, Tile b)
+    {
+        return a.number == b.number && !b.locked;
+    }
+
+    private void Merge(Tile a, Tile b)
+    {
+        tiles.Remove(a);
+        a.Merge(b.cell);
+
+        int index = Mathf.Clamp(IndexOf(b.state) + 1, 0, tileStates.Length - 1);
+        int number = b.number * 2;
+
+        b.SetState(tileStates[index], number);
+    }
+
+    private int IndexOf(TileState state)
+    {
+        for (int i = 0; i < tileStates.Length; i++)
+        {
+            if (state == tileStates[i]) return i;
+        }
+
+        return -1;
+    }
+
     private IEnumerator WaitForChanges()
     {
         waiting = true;
@@ -119,7 +151,11 @@ public class TileBoard : MonoBehaviour
         yield return new WaitForSeconds(0.05F);
         waiting = false;
 
-        // TODO: create new tile
+        foreach (Tile tile in tiles) {
+            tile.changeLocked();
+        }
+
+        if (tiles.Count != grid.size) CreateTile();
         // TODO: check for game over
     }
 }
