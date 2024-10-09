@@ -20,13 +20,33 @@ public class TileGrid : MonoBehaviour
 
     private void Start()
     {
-        for (int i = 0; i < height; i++)
+        for (int y = 0; y < height; y++)
         {
-            for (int j = 0; j < width; j++)
+            for (int x = 0; x < width; x++)
             {
-                rows[i].cells[j].coordinates = new Vector2Int(j, i);
+                rows[y].cells[x].coordinates = new Vector2Int(x, y);
             }
         }
+    }
+
+    public TileCell GetCell(int x, int y)
+    {
+        if (IsBound(x, y)) return rows[y].cells[x];
+        else return null;
+    }
+
+    public TileCell GetCell(Vector2Int coordinates)
+    {
+        return GetCell(coordinates.x, coordinates.y);
+    }
+
+    public TileCell GetAdjacentCell(TileCell cell, Vector2Int direction)
+    {
+        Vector2Int coordinates = cell.coordinates;
+        coordinates.x += direction.x;
+        coordinates.y -= direction.y;
+
+        return GetCell(coordinates);
     }
 
     public TileCell GetRandomEmptyCell()
@@ -42,5 +62,10 @@ public class TileGrid : MonoBehaviour
         }
 
         return cells[index];
+    }
+
+    private bool IsBound(int x, int y)
+    {
+        return x >= 0 && x < width && y >= 0 && y < height;
     }
 }
