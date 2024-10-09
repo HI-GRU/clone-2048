@@ -32,19 +32,37 @@ public class Tile : MonoBehaviour
     public void Spawn(TileCell cell)
     {
         if (this.cell != null) this.cell.tile = null;
-        
+
         this.cell = cell;
         this.cell.tile = this;
 
         transform.position = cell.transform.position;
     }
 
-    public void MoveTo(TileCell cell) {
+    public void MoveTo(TileCell cell)
+    {
         if (this.cell != null) this.cell.tile = null;
 
         this.cell = cell;
         this.cell.tile = this;
 
-        transform.position = cell.transform.position;
+        StartCoroutine(Animate(cell.transform.position));
+    }
+
+    private IEnumerator Animate(Vector3 to)
+    {
+        float elapsed = 0F;
+        float duration = 0.05F;
+
+        Vector3 from = transform.position;
+
+        while (elapsed < duration)
+        {
+            transform.position = Vector3.Lerp(from, to, elapsed / duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = to;
     }
 }
